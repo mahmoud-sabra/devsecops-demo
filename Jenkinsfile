@@ -30,8 +30,7 @@ pipeline {
                 }
             }
         }
-    }
-}
+
 
 //         stage('Quality Gate') {
 //           steps {
@@ -59,11 +58,11 @@ pipeline {
 //                 sh 'npm audit --audit-level=high > audit-result.txt || true'
 //             }
 //         }
-//         stage('Archive Results') {
-//             steps {
-//                  archiveArtifacts artifacts: 'semgrep-result.json,gitleaks-report.json,audit-result.txt', fingerprint: true
+        stage('Archive Results') {
+            steps {
+                 archiveArtifacts artifacts: 'semgrep-result.json,gitleaks-report.json,audit-result.txt', fingerprint: true
 
-//             }
-//         }
-//      }
-// }
+            }
+        }
+     }
+}
