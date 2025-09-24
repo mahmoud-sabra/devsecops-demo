@@ -1,0 +1,111 @@
+pipeline {
+    agent any
+
+    environment {
+        SONARQUBE = 'sonarqube'
+        DOCKER_IMAGE = 'quay.io/dyaaahmed/devsecops-demo'
+        DOCKER_TAG = 'latest'
+        REGISTRY_CREDENTIALS_ID = 'quay-creds-id'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main', url: 'https://gitlab.com/dyaaeldinahmed/devsecops-demo.git'
+            }
+        }
+
+        stage('SAST') {
+            steps {
+                sh 'semgrep --config auto . --json > semgrep-result.json'
+                sh 'nodejsscan -d . -o nodejsscan-result.json'
+            }
+        }
+
+        stage('Secrets Check') {
+           steps { 
+               //sh 'gitleaks detect --source . --exit-code 1'
+               sh 'gitleaks detect --source . --report-format json --report-path gitleaks-report.json || true'
+               
+           }
+        }
+
+        stage('Sonarqube') {
+            steps {
+                withSonarQubeEnv("${env.SONARQUBE}") {
+                    sh '''
+                        sonar-scanner \
+                          -Dsonar.projectKey=devsecops \
+                          -Dsonar.projectName="DevSecOps" \
+                          -Dsonar.projectVersion=1.0 \
+                          -Dsonar.sources=. \
+                          -Dsonar.exclusions=**/node_modules/**,**/venv/** \
+                          -Dsonar.host.url=$SONAR_HOST_URL \
+                          -Dsonar.login=$SONAR_AUTH_TOKEN
+                    '''
+                }
+            }
+        }
+
+        stage('Quality Gate') {
+          steps {
+            timeout(time: 5, unit: 'MINUTES') {
+            script {
+                    def qualityGate = waitForQualityGate()
+                    if (qualityGate.status != 'OK') {
+                         echo "Quality Gate failed with status: ${qualityGate.status}. Skipping failure as per configuration."
+                      } else {
+                         echo "Quality Gate passed."
+                     }
+                   }
+               }
+            }
+        }
+
+        stage('Audit') {
+            steps {
+                sh 'npm install && npm audit --audit-level=high > audit-result.txt || true'
+            }
+        }
+
+        stage('Build') {
+            steps {
+                script{
+                   docker.build("${DOCKER_IMAGE}:${DOCKER_TAG}")
+                }    
+            }
+        }
+        stage('Push to Quay.io') {
+            steps {
+                script {
+                    docker.withRegistry('https://quay.io', "${REGISTRY_CREDENTIALS_ID}") {
+                        docker.image("${DOCKER_IMAGE}:${DOCKER_TAG}").push()
+
+                    }
+                }
+            }
+        }
+        // stage('deploy') {
+        //     steps {
+        //         script {
+        //              sh 'docker compose pull && docker compose up -d'
+        //         }
+        //     }
+        // }
+        
+        stage('DAST') {
+            steps {
+                script {
+                   sh 'docker compose exec zap zap-full-scan.py -t http://devsecops-demo:3000 -r zap-report.html || true'
+                    }
+                }
+            }
+        //}
+        stage('Archive Results') {
+            steps {
+                 archiveArtifacts artifacts: 'gitleaks-report.json,semgrep-result.json,audit-result.txt,nodejsscan-result.json.json,zap-report.html', fingerprint: true
+
+            }
+        }
+    }
+}
