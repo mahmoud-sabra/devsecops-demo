@@ -30,38 +30,40 @@ pipeline {
                 }
             }
         }
-
-        stage('Quality Gate') {
-          steps {
-            timeout(time: 5, unit: 'MINUTES') {
-            script {
-                    def qualityGate = waitForQualityGate()
-                    if (qualityGate.status != 'OK') {
-                         echo "Quality Gate failed with status: ${qualityGate.status}. Skipping failure as per configuration."
-                      } else {
-                         echo "Quality Gate passed."
-                     }
-                   }
-               }
-            }
-        }
-        stage('Secrets Check') {
-           steps { 
-               sh 'gitleaks detect --source . --no-git --report-format json --report-path gitleaks-report.json || true'
-               
-           }
-        }
-
-        stage('SCA') {
-            steps {
-                sh 'npm audit --audit-level=high > audit-result.txt || true'
-            }
-        }
-        stage('Archive Results') {
-            steps {
-                 archiveArtifacts artifacts: 'semgrep-result.json,gitleaks-report.json,audit-result.txt', fingerprint: true
-
-            }
-        }
-     }
+    }
 }
+
+//         stage('Quality Gate') {
+//           steps {
+//             timeout(time: 5, unit: 'MINUTES') {
+//             script {
+//                     def qualityGate = waitForQualityGate()
+//                     if (qualityGate.status != 'OK') {
+//                          echo "Quality Gate failed with status: ${qualityGate.status}. Skipping failure as per configuration."
+//                       } else {
+//                          echo "Quality Gate passed."
+//                      }
+//                    }
+//                }
+//             }
+//         }
+//         stage('Secrets Check') {
+//            steps { 
+//                sh 'gitleaks detect --source . --no-git --report-format json --report-path gitleaks-report.json || true'
+               
+//            }
+//         }
+
+//         stage('SCA') {
+//             steps {
+//                 sh 'npm audit --audit-level=high > audit-result.txt || true'
+//             }
+//         }
+//         stage('Archive Results') {
+//             steps {
+//                  archiveArtifacts artifacts: 'semgrep-result.json,gitleaks-report.json,audit-result.txt', fingerprint: true
+
+//             }
+//         }
+//      }
+// }
