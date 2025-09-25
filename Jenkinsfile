@@ -46,12 +46,12 @@ pipeline {
                }
             }
         }
-//         stage('Secrets Check') {
-//            steps { 
-//                sh 'gitleaks detect --source . --no-git --report-format json --report-path gitleaks-report.json || true'
+        stage('Secrets Check') {
+           steps { 
+               sh 'gitleaks detect --source . --report-format json --report-path gitleaks-report.json || true'
                
-//            }
-//         }
+           }
+        }
 
 //         stage('SCA') {
 //             steps {
