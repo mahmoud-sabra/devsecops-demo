@@ -69,7 +69,7 @@ pipeline {
             steps {
                 script{
                     sh 'hadolint Dockerfile || true'
-                    // sh 'conftest test Dockerfile || true'
+                    sh 'conftest test Dockerfile || true'
                    
                 }    
             }
