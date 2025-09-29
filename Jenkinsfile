@@ -64,5 +64,16 @@ pipeline {
 
             }
         }
+
+        stage('Validate Dockerfile') {
+            steps {
+                script{
+                    sh 'hadolint Dockerfile || true'
+                    // sh 'conftest test Dockerfile || true'
+                   
+                }    
+            }
+        }
+
      }
 }
