@@ -35,8 +35,24 @@ RUN pip3 install --break-system-packages semgrep nodejsscan
 
 # Install Gitleaks
 RUN apt-get install wget && wget https://github.com/gitleaks/gitleaks/releases/download/v8.27.2/gitleaks_8.27.2_linux_x64.tar.gz && tar xvf gitleaks_8.27.2_linux_x64.tar.gz && cp gitleaks /usr/local/bin/ && chmod a+x /usr/local/bin/gitleaks
+
+# Install hadolint
+RUN curl -sSL -o /usr/local/bin/hadolint \
+      https://github.com/hadolint/hadolint/releases/latest/download/hadolint-Linux-x86_64 \
+    && chmod +x /usr/local/bin/hadolint
+
+
+RUN curl -sSL -o conftest.tar.gz https://github.com/open-policy-agent/conftest/releases/download/v0.24.0/conftest_0.24.0_Linux_x86_64.tar.gz && \ 
+    tar xvf conftest.tar.gz && \
+    mv conftest /usr/local/bin/ && \
+    chmod a+x /usr/local/bin/conftest
+
+RUN curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | \
+    sh -s -- -b /usr/local/bin
+
 # Switch back to Jenkins user
 USER jenkins
 
 # Install Jenkins plugins
 RUN jenkins-plugin-cli --plugins "blueocean docker-workflow json-path-api"
+
