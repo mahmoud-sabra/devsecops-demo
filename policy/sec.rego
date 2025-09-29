@@ -61,7 +61,7 @@ deny[msg] {
 }
 
 # Looking for latest docker image used
-warn[msg] {
+deny[msg] {
     input[i].Cmd == "from"
     val := split(input[i].Value[0], ":")
     count(val) == 1
